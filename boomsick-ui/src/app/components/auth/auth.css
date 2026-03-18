@@ -1,0 +1,50 @@
+.auth-wrapper {
+  min-height: 100vh;
+  background: rgba(0,0,0,0.85);
+}
+
+.auth-card {
+  background: #111;
+  border: 3px solid #ffcc00;
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-logo {
+  max-height: 100px;
+  filter: drop-shadow(0 0 10px #ffcc00);
+}
+
+.text-yellow { color: #ffcc00; font-weight: bold; letter-spacing: 1px; }
+
+.custom-input {
+  background: #222;
+  border: 1px solid #444;
+  color: white;
+  border-radius: 0;
+}
+
+.custom-input:focus {
+  background: #2a2a2a;
+  border-color: #ffcc00;
+  box-shadow: none;
+  color: white;
+}
+
+.btn-yellow {
+  background: #ffcc00;
+  color: black;
+  font-weight: 900;
+  border-radius: 0;
+  border: none;
+}
+
+.btn-yellow:hover { background: white; }
+
+.toggle-link {
+  color: #888;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.toggle-link:hover { color: #ffcc00; }

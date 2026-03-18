@@ -1,0 +1,110 @@
+<div class="container-fluid bg-black text-white min-vh-100">
+  <div class="row">
+
+    <div class="col-md-3 sidebar p-4 border-end border-dark">
+      <div class="logo-container mb-5">
+        <img src="/images/BoomsicK_logo_no_background.png" alt="BoomsicK Logo" class="img-fluid logo-glow">
+      </div>
+
+      <h5 class="text-uppercase small fw-bold mb-4 branding-text">Playlists</h5>
+
+      <div class="input-group mb-4 custom-input-group">
+        <input type="text" [(ngModel)]="newPlaylistName"
+               class="form-control bg-transparent text-white border-yellow"
+               placeholder="NAME YOUR VIBE...">
+        <button class="btn btn-yellow" (click)="onCreatePlaylist()">BOOM</button>
+      </div>
+
+      <ul class="list-unstyled playlist-list">
+        @for (p of playlists; track p.id) {
+          <li class="py-2 playlist-item" [class.active]="selectedPlaylist?.id === p.id" (click)="onSelectPlaylist(p)">
+            <span class="bomb-icon">💣</span> {{ p.name }}
+            <small class="text-secondary ms-2">({{ p.tracks?.length || 0 }})</small>
+          </li>
+        }
+      </ul>
+
+      @if (selectedPlaylist) {
+        <button class="btn btn-outline-warning btn-sm mt-3 w-100" (click)="resetView()">SHOW ALL TRACKS</button>
+      }
+    </div>
+
+    <div class="col-md-9 main-content p-4">
+      <div class="mb-4">
+        <input type="text" [(ngModel)]="searchTerm"
+               class="form-control bg-dark text-white border-yellow p-3"
+               placeholder="SEARCH FOR A TRACK OR ARTIST...">
+      </div>
+
+      <h2 class="branding-text mb-4 text-uppercase">
+        {{ selectedPlaylist ? 'Vibe: ' + selectedPlaylist.name : 'All Tracks' }}
+      </h2>
+
+      <div class="row pb-5"> @for (track of filteredTracks; track track.id) {
+        <div class="col-md-4 mb-4">
+          <div class="track-card h-100">
+            <h5 class="text-yellow mb-1">{{ track.title }}</h5>
+            <p class="text-white-50 small mb-3">{{ track.artist }}</p>
+
+            <div class="d-flex flex-column gap-2">
+              <button class="btn btn-yellow w-100 mb-2" (click)="playTrack(track)">
+                PLAY NOW
+              </button>
+
+              <div class="dropdown">
+                <button class="btn btn-outline-light btn-sm w-100 dropdown-toggle" data-bs-toggle="dropdown">
+                  ADD TO VIBE
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark border-yellow">
+                  @for (p of playlists; track p.id) {
+                    <li>
+                      <a class="dropdown-item" (click)="onAddTrackToPlaylist(p.id, track.id)">
+                        💣 {{ p.name }}
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="col-12 text-center p-5">
+          <h3 class="text-white-50">NO TRACKS FOUND</h3>
+        </div>
+      }
+      </div>
+    </div>
+  </div>
+</div>
+
+<audio #audioPlayer [src]="currentTrack?.url" (timeupdate)="onTimeUpdate()" (ended)="playNext()"></audio>
+
+@if (currentTrack) {
+  <div class="now-playing-bar d-flex flex-column">
+    <input type="range" class="w-100 custom-range-bar"
+           [value]="currentTime" [max]="duration" (input)="onSeek($event)">
+
+    <div class="d-flex align-items-center justify-content-between px-4 py-2 w-100">
+      <div class="d-flex align-items-center" style="width: 25%">
+        <span class="bomb-icon me-3">📻</span>
+        <div class="text-truncate">
+          <div class="fw-bold text-yellow text-uppercase small">{{ currentTrack.title }}</div>
+          <div class="extra-small text-white-50">{{ currentTrack.artist }}</div>
+        </div>
+      </div>
+
+      <div class="player-controls">
+        <button class="btn btn-link text-white" (click)="playPrevious()">PREV</button>
+        <button class="btn btn-yellow mx-3 px-4 shadow-glow" (click)="togglePlay()">
+          {{ isPlaying ? 'PAUSE' : 'PLAY' }}
+        </button>
+        <button class="btn btn-link text-white" (click)="playNext()">NEXT</button>
+      </div>
+
+      <div class="text-white-50 small text-end" style="width: 25%">
+        {{ formatTime(currentTime) }} / {{ formatTime(duration) }}
+      </div>
+    </div>
+  </div>
+}

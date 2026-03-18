@@ -1,0 +1,35 @@
+<div class="auth-wrapper d-flex align-items-center justify-content-center">
+  <div class="auth-card p-5 shadow-lg">
+    <div class="text-center mb-4">
+      <img src="/images/BoomsicK_logo_no_background.png" alt="BoomsicK" class="auth-logo">
+      <h2 class="branding-text mt-3">{{ isLogin ? 'Login' : 'JOIN THE CREW' }}</h2>
+    </div>
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="mb-3" *ngIf="!isLogin">
+        <label class="form-label text-yellow">USERNAME</label>
+        <input type="text" [(ngModel)]="authData.username" name="username" class="form-control custom-input" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label text-yellow">EMAIL</label>
+        <input type="email" [(ngModel)]="authData.email" name="email" class="form-control custom-input" required>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label text-yellow">PASSWORD</label>
+        <input type="password" [(ngModel)]="authData.password" name="password" class="form-control custom-input" required>
+      </div>
+
+      <button type="submit" class="btn btn-yellow w-100 py-2 mb-3">
+        {{ isLogin ? 'LOG IN' : 'REGISTER' }}
+      </button>
+
+      <div class="text-center">
+        <a href="javascript:void(0)" (click)="toggleMode()" class="toggle-link">
+          {{ isLogin ? "Don't have an account? Sign up" : "Already a member? Log in" }}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
