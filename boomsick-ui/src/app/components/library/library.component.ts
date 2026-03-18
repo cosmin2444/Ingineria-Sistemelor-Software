@@ -38,7 +38,11 @@ export class LibraryComponent implements OnInit {
 
   loadTracks() {
     this.trackService.getTracks().subscribe({
-      next: (data) => this.tracks = data,
+      next: (data) => {
+        this.tracks = data
+
+        this.cdr.detectChanges()
+      },
       error: (err) => console.error('Eroare la piese:',err)
     });
   }
@@ -135,6 +139,7 @@ export class LibraryComponent implements OnInit {
     if (currentIndex < this.filteredTracks.length - 1) {
       this.currentTrack = this.filteredTracks[currentIndex + 1];
     }
+    this.playTrack(this.currentTrack);
   }
 
   playPrevious() {
@@ -143,6 +148,7 @@ export class LibraryComponent implements OnInit {
     if (currentIndex > 0) {
       this.currentTrack = this.filteredTracks[currentIndex - 1];
     }
+    this.playTrack(this.currentTrack);
   }
 
   playTrack(track: Track) {
@@ -186,5 +192,13 @@ export class LibraryComponent implements OnInit {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  }
+
+  onVolumeRocker(volume: number){
+    const normalizedVolume = volume / 100;
+    if(normalizedVolume >= 0 && normalizedVolume <= 1){
+      this.audioPlayer.nativeElement.volume = normalizedVolume;
+    }
+
   }
 }
