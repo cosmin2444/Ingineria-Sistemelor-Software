@@ -28,4 +28,12 @@ export class PlaylistService {
   getUserPlaylists(userId: number): Observable<any[]>{
     return this.http.get<any[]>(`${this.apiUrl}/user/${userId}`);
   }
+
+  deletePlaylist(playlistId: number): Observable<any>{
+    return this.http.delete(`${this.apiUrl}/${playlistId}`);
+  }
+
+  removeTrackFromPlaylist(playlistId: number, trackId: number): Observable<any>{
+    return this.http.delete(`${this.apiUrl}/${playlistId}/tracks/${trackId}`);
+  }
 }

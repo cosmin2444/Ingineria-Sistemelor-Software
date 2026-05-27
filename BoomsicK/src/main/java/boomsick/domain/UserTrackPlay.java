@@ -7,16 +7,23 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name ="tracks")
+@Table(name = "user_track_plays")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Track {
+public class UserTrackPlay {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String title;
-    private String artist;
-    private String url;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "track_id", nullable = false)
+    private Track track;
+
+    private int playCount;
 }

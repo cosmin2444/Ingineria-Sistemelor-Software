@@ -1,9 +1,11 @@
 import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
-import {Track, TrackService} from '../../services/track.service'
+import {Track, TrackService, ArtistPlayCount} from '../../services/track.service'
 import {HttpClient} from '@angular/common/http';
+import { Router } from '@angular/router';
 
 import {PlaylistService} from '../../services/playlist.service';
+import {UserService} from '../../services/user.service';
 import {FormsModule} from '@angular/forms';
 
 @Component({
@@ -21,6 +23,20 @@ export class LibraryComponent implements OnInit {
   newPlaylistName: string = '';
   searchTerm: string = '';
   currentTrack: Track | null = null;
+  activeDropdownTrackId: number | null = null;
+  isAddTrackModalOpen: boolean = false;
+  showingLikedSongs: boolean = false;
+  showingStats: boolean = false;
+  topTracks: Track[] = [];
+  topArtists: ArtistPlayCount[] = [];
+  likedTrackIds: Set<number> = new Set<number>();
+  playQueue: Track[] = [];
+  isQueueDrawerOpen: boolean = false;
+  newTrack: Track = {
+    title: '',
+    artist: '',
+    url: ''
+  };
   @ViewChild('audioPlayer') audioPlayer!: ElementRef<HTMLAudioElement>;
 
   isPlaying: boolean = false;
@@ -28,12 +44,19 @@ export class LibraryComponent implements OnInit {
   currentTime: number = 0;
   duration: number = 0;
 
-  constructor(private trackService: TrackService, private playlistService: PlaylistService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private trackService: TrackService,
+    private playlistService: PlaylistService,
+    private userService: UserService,
+    private cdr: ChangeDetectorRef,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     console.log('Library initialized. Checking for user...');
     this.loadTracks();
     this.loadPlaylists();
+    this.loadLikedTrackIds();
   }
 
   loadTracks() {
@@ -84,6 +107,16 @@ export class LibraryComponent implements OnInit {
           this.playlists = data;
           console.log('Playlists loaded instantly:', data);
 
+          if (this.selectedPlaylist) {
+            const updated = this.playlists.find(p => p.id === this.selectedPlaylist.id);
+            if (updated) {
+              this.selectedPlaylist = updated;
+              this.tracks = updated.tracks || [];
+            } else {
+              this.resetView();
+            }
+          }
+
           this.cdr.detectChanges();
         },
         error: (err) => console.error('Eroare la playlist-uri:', err)
@@ -112,8 +145,44 @@ export class LibraryComponent implements OnInit {
     });
   }
 
+  onDeletePlaylist(event: Event, playlistId: number) {
+    event.stopPropagation(); // Previne selectarea playlistului la click pe stergere
+    if (confirm('Sigur vrei să ștergi acest playlist?')) {
+      this.playlistService.deletePlaylist(playlistId).subscribe({
+        next: () => {
+          console.log('Playlist șters cu succes:', playlistId);
+          this.loadPlaylists();
+        },
+        error: (err) => {
+          console.error('Eroare la ștergerea playlistului:', err);
+          alert('Ups! Nu am putut șterge playlistul.');
+        }
+      });
+    }
+  }
+
+  onRemoveTrackFromPlaylist(playlistId: number, trackId: number | undefined) {
+    if (!trackId) {
+      console.error('ID-ul piesei lipsește!');
+      return;
+    }
+
+    this.playlistService.removeTrackFromPlaylist(playlistId, trackId).subscribe({
+      next: (res) => {
+        console.log('Piesă eliminată cu succes:', res);
+        this.loadPlaylists();
+      },
+      error: (err) => {
+        console.error('Eroare la eliminare:', err);
+        alert('Ups! Ceva n-a mers la eliminarea piesei.');
+      }
+    });
+  }
+
   onSelectPlaylist(playlist: any){
     this.selectedPlaylist = playlist;
+    this.showingLikedSongs = false;
+    this.showingStats = false;
     console.log('Playlist selectat:',playlist.name);
 
     if(playlist.tracks){
@@ -134,27 +203,44 @@ export class LibraryComponent implements OnInit {
   }
 
   playNext() {
-    if (!this.currentTrack) return;
-    const currentIndex = this.filteredTracks.findIndex(t => t.id === this.currentTrack?.id);
-    if (currentIndex < this.filteredTracks.length - 1) {
-      this.currentTrack = this.filteredTracks[currentIndex + 1];
+    if (!this.currentTrack || this.playQueue.length === 0) return;
+    const currentIndex = this.playQueue.findIndex(t => t.id === this.currentTrack?.id);
+    if (currentIndex !== -1 && currentIndex < this.playQueue.length - 1) {
+      this.playTrack(this.playQueue[currentIndex + 1], false);
     }
-    this.playTrack(this.currentTrack);
   }
 
   playPrevious() {
-    if (!this.currentTrack) return;
-    const currentIndex = this.filteredTracks.findIndex(t => t.id === this.currentTrack?.id);
+    if (!this.currentTrack || this.playQueue.length === 0) return;
+    const currentIndex = this.playQueue.findIndex(t => t.id === this.currentTrack?.id);
     if (currentIndex > 0) {
-      this.currentTrack = this.filteredTracks[currentIndex - 1];
+      this.playTrack(this.playQueue[currentIndex - 1], false);
     }
-    this.playTrack(this.currentTrack);
   }
 
-  playTrack(track: Track) {
+  playTrack(track: Track, updateQueue: boolean = true) {
     this.currentTrack = track;
     this.isPlaying = true;
     console.log('Now playing:', track.title);
+
+    if (updateQueue) {
+      this.playQueue = [...this.filteredTracks];
+    } else if (!this.playQueue.some(t => t.id === track.id)) {
+      this.playQueue = [...this.filteredTracks];
+    }
+
+    const userId = this.getCurrentUserId();
+    if (track.id && userId !== 0) {
+      this.trackService.incrementPlayCount(track.id, userId).subscribe({
+        next: (res) => {
+          console.log('Play count incremented:', res.track.title, res.playCount);
+          if (this.showingStats) {
+            this.loadStatsDashboard();
+          }
+        },
+        error: (err) => console.error('Failed to increment play count:', err)
+      });
+    }
 
     setTimeout(()=>{
       this.audioPlayer.nativeElement.load();
@@ -200,5 +286,209 @@ export class LibraryComponent implements OnInit {
       this.audioPlayer.nativeElement.volume = normalizedVolume;
     }
 
+  }
+
+  toggleDropdown(trackId: number | undefined) {
+    if (!trackId) return;
+    if (this.activeDropdownTrackId === trackId) {
+      this.activeDropdownTrackId = null;
+    } else {
+      this.activeDropdownTrackId = trackId;
+    }
+  }
+
+  openAddTrackModal() {
+    this.isAddTrackModalOpen = true;
+  }
+
+  closeAddTrackModal() {
+    this.isAddTrackModalOpen = false;
+    this.newTrack = {
+      title: '',
+      artist: '',
+      url: ''
+    };
+  }
+
+  onAddTrack() {
+    if (!this.newTrack.title || !this.newTrack.artist || !this.newTrack.url) {
+      alert('Vă rugăm să completați toate câmpurile!');
+      return;
+    }
+
+    this.trackService.createTrack(this.newTrack).subscribe({
+      next: (track) => {
+        console.log('Piesă adăugată cu succes:', track);
+        alert('Piesa a fost adăugată în baza de date!');
+        this.closeAddTrackModal();
+        this.loadTracks(); // Reîncărcăm lista de piese
+      },
+      error: (err) => {
+        console.error('Eroare la adăugarea piesei:', err);
+        alert('Ups! Nu am putut adăuga piesa.');
+      }
+    });
+  }
+
+  loadLikedTrackIds() {
+    const userId = this.getCurrentUserId();
+    if (userId !== 0) {
+      this.userService.getLikedTracks(userId).subscribe({
+        next: (tracks) => {
+          this.likedTrackIds = new Set(tracks.map(t => t.id!).filter(id => id !== undefined));
+          if (this.showingLikedSongs) {
+            this.tracks = tracks;
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Eroare la încărcarea pieselor apreciate:', err)
+      });
+    }
+  }
+
+  showAllTracks() {
+    this.showingLikedSongs = false;
+    this.showingStats = false;
+    this.selectedPlaylist = null;
+    this.loadTracks();
+  }
+
+  showLikedSongs() {
+    this.showingLikedSongs = true;
+    this.showingStats = false;
+    this.selectedPlaylist = null;
+    const userId = this.getCurrentUserId();
+    if (userId !== 0) {
+      this.userService.getLikedTracks(userId).subscribe({
+        next: (tracks) => {
+          this.tracks = tracks;
+          this.likedTrackIds = new Set(tracks.map(t => t.id!).filter(id => id !== undefined));
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Eroare la încărcarea pieselor apreciate:', err)
+      });
+    }
+  }
+
+  isLiked(trackId: number | undefined): boolean {
+    return trackId ? this.likedTrackIds.has(trackId) : false;
+  }
+
+  toggleLikeTrack(track: Track) {
+    const userId = this.getCurrentUserId();
+    if (userId === 0) {
+      alert('Vă rugăm să vă autentificați!');
+      return;
+    }
+    const trackId = track.id;
+    if (!trackId) return;
+
+    if (this.isLiked(trackId)) {
+      this.userService.unlikeTrack(userId, trackId).subscribe({
+        next: () => {
+          this.likedTrackIds.delete(trackId);
+          if (this.showingLikedSongs) {
+            this.showLikedSongs(); // Reîncărcăm lista de piese apreciate
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Eroare la de-apreciere:', err)
+      });
+    } else {
+      this.userService.likeTrack(userId, trackId).subscribe({
+        next: () => {
+          this.likedTrackIds.add(trackId);
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Eroare la apreciere:', err)
+      });
+    }
+  }
+
+  showStatsDashboard() {
+    this.showingStats = true;
+    this.showingLikedSongs = false;
+    this.selectedPlaylist = null;
+    this.loadStatsDashboard();
+  }
+
+  loadStatsDashboard() {
+    const userId = this.getCurrentUserId();
+    if (userId === 0) return;
+
+    this.trackService.getTopPlayedTracks(userId).subscribe({
+      next: (plays) => {
+        this.topTracks = plays.map(p => {
+          const track = p.track;
+          track.playCount = p.playCount;
+          return track;
+        });
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Eroare la încărcarea melodiilor de top:', err)
+    });
+
+    this.trackService.getTopPlayedArtists(userId).subscribe({
+      next: (artists) => {
+        this.topArtists = artists;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Eroare la încărcarea artiștilor de top:', err)
+    });
+  }
+
+  toggleQueueDrawer() {
+    this.isQueueDrawerOpen = !this.isQueueDrawerOpen;
+  }
+
+  addToQueue(track: Track) {
+    this.playQueue.push(track);
+    alert(`Piesa "${track.title}" a fost adăugată în coadă!`);
+    this.cdr.detectChanges();
+  }
+
+  moveTrackUp(index: number) {
+    if (index > 0) {
+      const temp = this.playQueue[index];
+      this.playQueue[index] = this.playQueue[index - 1];
+      this.playQueue[index - 1] = temp;
+      this.cdr.detectChanges();
+    }
+  }
+
+  moveTrackDown(index: number) {
+    if (index < this.playQueue.length - 1) {
+      const temp = this.playQueue[index];
+      this.playQueue[index] = this.playQueue[index + 1];
+      this.playQueue[index + 1] = temp;
+      this.cdr.detectChanges();
+    }
+  }
+
+  removeTrackFromQueue(index: number) {
+    const removedTrack = this.playQueue[index];
+    this.playQueue.splice(index, 1);
+    
+    if (this.currentTrack?.id === removedTrack.id) {
+      if (this.playQueue.length > 0) {
+        const nextIndex = index < this.playQueue.length ? index : this.playQueue.length - 1;
+        this.playTrack(this.playQueue[nextIndex], false);
+      } else {
+        this.currentTrack = null;
+        this.isPlaying = false;
+      }
+    }
+    this.cdr.detectChanges();
+  }
+
+  logout() {
+    localStorage.removeItem('currentUser');
+    if (this.audioPlayer && this.audioPlayer.nativeElement) {
+      this.audioPlayer.nativeElement.pause();
+    }
+    this.currentTrack = null;
+    this.isPlaying = false;
+    this.playQueue = [];
+    this.router.navigate(['/']);
   }
 }

@@ -196,3 +196,236 @@
   font-size: 0.65rem;
   font-weight: bold;
 }
+
+.delete-playlist-btn {
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  cursor: pointer;
+  background: transparent;
+}
+
+.playlist-item:hover .delete-playlist-btn {
+  opacity: 0.6;
+}
+
+.playlist-item .delete-playlist-btn:hover {
+  opacity: 1;
+  transform: scale(1.2);
+  color: #ff3333 !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Glassmorphic Add Track Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 2000;
+}
+
+.custom-modal {
+  background: rgba(15, 15, 15, 0.95);
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 0 35px rgba(255, 204, 0, 0.25);
+  border-radius: 0px; /* Punk style sharp corners */
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.btn-close-modal:hover {
+  color: var(--boomsick-yellow);
+  transform: rotate(90deg);
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pop-in {
+  animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Sidebar main navigation links styling */
+.navigation-list .nav-item {
+  color: #888;
+  font-family: 'Impact', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.navigation-list .nav-item:hover {
+  color: #fff;
+  transform: translateX(5px);
+}
+
+.navigation-list .nav-item.active {
+  color: var(--boomsick-yellow) !important;
+  border-left: 3px solid var(--boomsick-yellow);
+  padding-left: 10px;
+}
+
+.btn-like {
+  padding: 5px;
+  outline: none;
+  box-shadow: none !important;
+  transition: transform 0.2s;
+  z-index: 100;
+}
+
+.btn-like:hover {
+  transform: scale(1.3);
+}
+
+.hover-heart {
+  transition: color 0.2s;
+}
+
+.hover-heart:hover {
+  color: #ff3333 !important;
+}
+
+/* Statistics Dashboard Styling */
+.stats-card {
+  background: var(--dark-surface);
+  border: 1px solid #333;
+  border-bottom: 4px solid var(--boomsick-yellow);
+  border-radius: 0px;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  transition: transform 0.3s;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  border-color: #fff;
+}
+
+.stats-list li {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.rank-number {
+  font-family: 'Impact', sans-serif;
+  font-size: 1.5rem;
+  min-width: 25px;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
+}
+
+.progress-bar-container {
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-level {
+  border-radius: 3px;
+  transition: width 0.8s ease-in-out;
+  box-shadow: 0 0 8px var(--boomsick-yellow);
+}
+
+.bg-yellow {
+  background-color: var(--boomsick-yellow) !important;
+}
+
+/* Custom Queue Styles */
+.btn-outline-yellow {
+  border: 1.5px solid var(--boomsick-yellow) !important;
+  background: transparent;
+  color: var(--boomsick-yellow);
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: 0.2s;
+  border-radius: 0px;
+}
+
+.btn-outline-yellow:hover, .btn-outline-yellow.active {
+  background: var(--boomsick-yellow) !important;
+  color: #000 !important;
+  transform: skewX(-10deg);
+}
+
+.queue-drawer {
+  position: fixed;
+  top: 0;
+  right: -370px; /* Hidden by default */
+  width: 350px;
+  height: calc(100vh - 80px); /* Leave room for player bar */
+  background: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 999;
+  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.8);
+}
+
+.queue-drawer.open {
+  right: 0; /* Slide in! */
+}
+
+.queue-item {
+  background: rgba(20, 20, 20, 0.6);
+  border: 1px solid #222;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.queue-item:hover {
+  background: rgba(30, 30, 30, 0.8);
+  border-color: #444;
+}
+
+.queue-item.active {
+  border-color: var(--boomsick-yellow);
+  background: rgba(255, 204, 0, 0.05);
+}
+
+.reorder-btn {
+  font-size: 0.8rem;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+}
+
+.queue-item:hover .reorder-btn {
+  opacity: 0.8;
+}
+
+.reorder-btn:hover {
+  opacity: 1 !important;
+}
+
+.delete-btn {
+  font-size: 0.8rem;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+}
+
+.queue-item:hover .delete-btn {
+  opacity: 0.8;
+}
+
+.delete-btn:hover {
+  opacity: 1 !important;
+}

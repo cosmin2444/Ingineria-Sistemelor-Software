@@ -2,12 +2,14 @@ package boomsick.controller;
 
 import boomsick.domain.LoginRequest;
 import boomsick.domain.User;
+import boomsick.domain.Track;
 import boomsick.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/users")
@@ -31,5 +33,20 @@ public class UserController {
         } else {
             return ResponseEntity.status(401).body("Email sau parolă greșită!"); // Returnează un String
         }
+    }
+
+    @PostMapping("/{userId}/like/{trackId}")
+    public ResponseEntity<User> likeTrack(@PathVariable Long userId, @PathVariable Long trackId) {
+        return ResponseEntity.ok(userService.likeTrack(userId, trackId));
+    }
+
+    @DeleteMapping("/{userId}/like/{trackId}")
+    public ResponseEntity<User> unlikeTrack(@PathVariable Long userId, @PathVariable Long trackId) {
+        return ResponseEntity.ok(userService.unlikeTrack(userId, trackId));
+    }
+
+    @GetMapping("/{userId}/liked-tracks")
+    public ResponseEntity<Set<Track>> getLikedTracks(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getLikedTracks(userId));
     }
 }

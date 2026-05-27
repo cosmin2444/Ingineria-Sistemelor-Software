@@ -45,4 +45,20 @@ public class PlaylistService {
     public List<Playlist> findByOwnerId(Long userId){
         return  playlistRepository.findByOwnerId(userId);
     }
+
+    public void deletePlaylist(Long id) {
+        Playlist playlist = playlistRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Playlist not found with ID: " + id));
+        playlistRepository.delete(playlist);
+    }
+
+    public Playlist removeTrackFromPlaylist(Long playlistId, Long trackId) {
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(() -> new RuntimeException("Playlist not found with ID: " + playlistId));
+        Track track = trackRepository.findById(trackId)
+                .orElseThrow(() -> new RuntimeException("Track not found with ID: " + trackId));
+
+        playlist.getTracks().remove(track);
+        return playlistRepository.save(playlist);
+    }
 }

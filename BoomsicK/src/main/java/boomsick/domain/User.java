@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name="users")
 @Getter
@@ -27,4 +30,12 @@ public class User {
     private String password;
 
     private String role;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name="users_liked_tracks",
+            joinColumns = @JoinColumn(name="user_id"),
+            inverseJoinColumns = @JoinColumn(name="track_id")
+    )
+    private Set<Track> likedTracks = new HashSet<>();
 }
